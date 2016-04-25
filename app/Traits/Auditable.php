@@ -61,7 +61,7 @@ trait Auditable
     public function auditUpdate()
     {
         $className = get_class( $this );
-        Log::info( "$className({$this->id}) was updated", ['event' => 'update', 'entity' => "$className({$this->id})"] );
+        Log::info( "$className({$this->id}) was updated", ['event' => 'update', 'entity' => "$className({$this->id})", 'changes' => $this->getModelChanges()] );
     }
 
     /**
@@ -105,6 +105,32 @@ trait Auditable
         $instance->fireModelEvent( 'loading' );
 
         return $instance;
+    }
+
+    /**
+     * Helper function to build an array with a list of the things we've
+     * changed on this model.
+     *
+     * @return array
+     */
+    private function getModelChanges()
+    {
+        $changes = array();
+        $dirty = self::getDirty();
+
+        foreach ( $dirty as $attribute => $newValue )
+        {
+            if ( $newValue != self::getOriginal($attribute) )
+            {
+                $change = [ 'attribute' => $attribute ];
+                $change['original'] = self::getOriginal( $attribute );
+                $change['current'] = $newValue;
+
+                $changes[] = $change;
+            }
+        }
+
+        return $changes;
     }
 
 }
