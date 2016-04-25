@@ -6,29 +6,41 @@ trait Auditable
 {
     public static function bootAuditable()
     {
-        self::loading( function ($obj)
+        if ( !self::manuallyAudit('read') )
         {
-            $obj->auditRead();
-            return true;
-        } );
+            self::loading( function ($obj)
+            {
+                $obj->auditRead();
+                return true;
+            } );
+        }
 
-        self::created( function ($obj)
+        if ( !self::manuallyAudit('create') )
         {
-            $obj->auditCreate();
-            return true;
-        } );
+            self::created( function ($obj)
+            {
+                $obj->auditCreate();
+                return true;
+            } );
+        }
 
-        self::updated( function ($obj)
+        if ( !self::manuallyAudit('update') )
         {
-            $obj->auditUpdate();
-            return true;
-        } );
+            self::updated( function ($obj)
+            {
+                $obj->auditUpdate();
+                return true;
+            } );
+        }
 
-        self::deleted( function ($obj)
+        if ( !self::manuallyAudit('delete') )
         {
-            $obj->auditDelete();
-            return true;
-        } );
+            self::deleted( function ($obj)
+            {
+                $obj->auditDelete();
+                return true;
+            } );
+        }
     }
 
     /**
@@ -131,6 +143,24 @@ trait Auditable
         }
 
         return $changes;
+    }
+
+    /**
+     * In some cases we don't want to automatically audit events
+     *
+     * @param string $action (e.g. read, create, etc...)
+     * @return bool
+     */
+    public static function manuallyAudit( $action )
+    {
+        if ( isset(self::$manuallyAudit) &&
+             isset(self::$manuallyAudit[$action]) &&
+             self::$manuallyAudit[$action] === true )
+        {
+            return true;
+        }
+
+        return false;
     }
 
 }

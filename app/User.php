@@ -15,6 +15,10 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
 {
     use Authenticatable, Authorizable, CanResetPassword, Auditable;
 
+    protected static $manuallyAudit = [
+        'read' => true
+    ];
+
     /**
      * The database table used by the model.
      *
